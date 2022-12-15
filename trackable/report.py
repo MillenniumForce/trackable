@@ -1,8 +1,9 @@
 """Module used to generate a minimal report to track ML models"""
 
-from typing import List, Optional
+from typing import Dict, List, Optional, Union
 
 from trackable import types
+from trackable.exceptions import ModelAlreadyExistsError
 
 
 class Report:
@@ -13,7 +14,7 @@ class Report:
         self.y_test = y_test
         self.metrics = metrics
         self.sort_on = sort_on
-        self._models: List[dict] = []
+        self._models: dict = {}
         self._results: List[dict] = []
 
     def add_model(
@@ -29,12 +30,15 @@ class Report:
 
         y_pred = model.predict(X)
 
-        results = []
-        for metric in self.metrics:
-            results.append(metric(y, y_pred))
-
-        self._results.append(dict(name=name, results=results))
-        self._models.append(dict(name=name, model=model))
+        results: Dict[str, Union[str, float]] = {metric.__name__: metric(y, y_pred) for metric in self.metrics}
+        results["name"] = name
+        if name in self._models:
+            raise ModelAlreadyExistsError(
+                """Model already exists. Are you sure you want to add this model.
+                If so, try adding with a different name."""
+            )
+        self._results.append(results)
+        self._models[name] = model
 
     def generate(self):
         pass
