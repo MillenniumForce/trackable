@@ -5,4 +5,4 @@ __email__ = 'trackable.py@gmail.com'
 __version__ = '0.1.0'
 
 
-from .report import Report
+from trackable.report import Report

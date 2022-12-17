@@ -5,6 +5,8 @@ from typing import Dict, List, Optional, Union
 from trackable import types
 from trackable.exceptions import ModelAlreadyExistsError
 
+__all__ = ["Report"]
+
 
 class Report:
     def __init__(
