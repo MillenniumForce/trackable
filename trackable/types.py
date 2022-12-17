@@ -7,7 +7,7 @@ from numpy import ndarray
 from pandas import DataFrame
 
 Data = Union[DataFrame, ndarray]
-Metric = Callable[[Data, Data], float]
+Metric = Callable[[Data, Data], Union[float, int]]
 
 
 class GenericModel(Protocol):

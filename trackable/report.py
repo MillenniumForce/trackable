@@ -2,6 +2,8 @@
 
 from typing import Dict, List, Optional, Union
 
+import pandas as pd
+
 from trackable import types
 from trackable.exceptions import ModelAlreadyExistsError
 
@@ -42,5 +44,9 @@ class Report:
         self._results.append(results)
         self._models[name] = model
 
-    def generate(self):
-        pass
+    def generate(self) -> pd.DataFrame:
+        if not self._results:
+            return pd.DataFrame([])
+        results = pd.DataFrame(self._results)
+        results = results.set_index("name")
+        return results
