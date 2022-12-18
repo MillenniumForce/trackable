@@ -1,4 +1,4 @@
-"""Internal module for typing extensions"""
+"""Internal module for typing extensions."""
 
 
 from typing import Any, Callable, Protocol
@@ -10,5 +10,5 @@ class GenericModel(Protocol):
     """Generic Sklearn Type model."""
 
     def predict(self, data: Any) -> Any:
-        """Generic predict method"""
+        """Generic predict method."""
         ...

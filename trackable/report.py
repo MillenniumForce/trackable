@@ -1,4 +1,4 @@
-"""Module used to generate a minimal report to track ML models"""
+"""Module used to generate a minimal report to track ML models."""
 
 from typing import Any, Dict, List, Literal, Optional, Union
 
@@ -12,8 +12,7 @@ __all__ = ["Report"]
 
 
 class Report:
-    """
-    A minimalistic model reporting class.
+    """A minimalistic model reporting class.
 
     A simple usage pipeline may include:
 
@@ -38,6 +37,7 @@ class Report:
     """
 
     def __init__(self, X_test: Any, y_test: Any, metrics: List[types.Metric]) -> None:
+        """Instantiate a Report."""
         self.X_test = X_test
         self.y_test = y_test
         self.metrics = metrics
@@ -51,11 +51,11 @@ class Report:
         X_test: Optional[Any] = None,
         y_test: Optional[Any] = None,
     ) -> None:
-        """
-        Add a model to the report. The model is passed through each metric
-        and then cached in memory. In future versions, caching strategies
-        may change to account for larger models. Also note that each
-        model must be unique otherwise an error is raised.
+        """Add a model to the report.
+
+        The model is passed through each metric and then cached in memory.
+        In future versions, caching strategies may change to account for larger models.
+        Also note that each model must be unique otherwise an error is raised.
 
         Args:
             model (types.GenericModel):
@@ -91,8 +91,7 @@ class Report:
         self._models[name] = model
 
     def generate(self, highlight: Literal["max", "min", False] = "max") -> Union[Styler, pd.DataFrame]:
-        """
-        Generate the report. By default, the maximum value of each column is highlighted
+        """Generate the report. By default, the maximum value of each column is highlighted.
 
         Args:
             highlight (One of: &quot;max&quot;, &quot;min&quot;, False):
