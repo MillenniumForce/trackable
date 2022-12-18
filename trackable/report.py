@@ -12,6 +12,31 @@ __all__ = ["Report"]
 
 
 class Report:
+    """
+    A minimalistic model reporting class.
+
+    A simple usage pipeline may include:
+
+    1. Instantiate the class `report = Report(X_test, y_test, metrics=[...])`
+
+    2. Add models `report.add_model(...)`
+
+    3. Generate the report `report.generate()`
+
+    Args:
+        X_test (ndarray or DataFrame):
+            Testing data which is used to evaluate with the provided metrics.
+            Can be substituted for another dataframe in `.add_model`.
+        y_test (ndarray or DataFrame):
+            Ground truth testing data for evaluation.
+            Can be substituted for another dataframe in `.add_model`.
+        metrics (List of sklearn style metrics):
+            A list of metrics in the style of a sklearn metric.
+            In other words, the first argument should be y_true and the second y_pred.
+            It is not advised to change metrics once the class is instantied. Instead,
+            a new Report object should be created for a set of new metrics.
+    """
+
     def __init__(self, X_test: Any, y_test: Any, metrics: List[types.Metric]) -> None:
         self.X_test = X_test
         self.y_test = y_test

@@ -81,7 +81,7 @@ def test_add_model_with_exception(mock_report, mock_model):
 def test_generate_1(mock_report, mock_model):
     """Test generate 1: show correct results in dataframe"""
     mock_report.add_model(mock_model)
-    report = mock_report.generate()
+    report = mock_report.generate(False)
     correct = pd.DataFrame([{"<lambda>": 1.0, "name": "Mock"}]).set_index("name")
     print(report)
     print(correct)
@@ -105,4 +105,4 @@ def test_generate_3(mock_report_complex, mock_model):
             {"mock_metric_1": 1, "mock_metric_2": 2, "name": "Mock B"},
         ]
     ).set_index("name")
-    assert correct.equals(mock_report_complex.generate())
+    assert correct.equals(mock_report_complex.generate(False))
