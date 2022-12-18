@@ -58,21 +58,21 @@ class Report:
         Also note that each model must be unique otherwise an error is raised.
 
         Args:
-            model (types.GenericModel):
+            model (GenericModel):
                 A generic sklearn type model which must have a `.predict` method.
                 For more complex models, it's easy to create a meta-class which
                 can abstract much of the models complexities
                 (e.g. a forward pass of a neural network) into a `.predict` method.
-            name (Optional[str], optional):
+            name (str, optional):
                 Name of the model. Defaults to `model.__class__.__name__`.
-            X_test (Optional[Any], optional):
-                Overwrite the testing data. Defaults to X_test that was used to instantiate the class.
-            y_test (Optional[Any], optional):
-            Overwrite the testing data. Defaults to y_test that was used to instantiate the class.
+            X_test (Any, optional): Overwrite the testing data.
+                Defaults to X_test that was used to instantiate the class.
+            y_test (Any, optional): Overwrite the testing data.
+                Defaults to y_test that was used to instantiate the class.
 
         Raises:
-            ModelAlreadyExistsError:
-                Raised if model name already exists. This is essentially to avoid caching conflicts.
+            ModelAlreadyExistsError: Raised if model name already exists.
+                This is essentially to avoid caching conflicts.
         """
         X = X_test if X_test else self.X_test
         y = y_test if y_test else self.y_test
@@ -102,7 +102,7 @@ class Report:
             TypeError: Raised if the highlighting strategy is supported.
 
         Returns:
-            Union[Styler, pd.DataFrame]: A dataframe or a highlighted Styler.
+            Styler or DataFrame: A dataframe or a highlighted Styler.
         """
         if not self._results:
             return pd.DataFrame([])
