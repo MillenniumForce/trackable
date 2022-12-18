@@ -1,18 +1,14 @@
 """Internal module for typing extensions"""
 
 
-from typing import Callable, Protocol, Union
+from typing import Any, Callable, Protocol
 
-from numpy import ndarray
-from pandas import DataFrame
-
-Data = Union[DataFrame, ndarray]
-Metric = Callable[[Data, Data], Union[float, int]]
+Metric = Callable[[Any, Any], Any]
 
 
 class GenericModel(Protocol):
     """Generic Sklearn Type model."""
 
-    def predict(self, data: Data) -> Data:
+    def predict(self, data: Any) -> Any:
         """Generic predict method"""
         ...

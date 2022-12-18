@@ -1,8 +1,9 @@
 """Module used to generate a minimal report to track ML models"""
 
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import pandas as pd
+from pandas.io.formats.style import Styler
 
 from trackable import types
 from trackable.exceptions import ModelAlreadyExistsError
@@ -11,13 +12,10 @@ __all__ = ["Report"]
 
 
 class Report:
-    def __init__(
-        self, X_test: types.Data, y_test: types.Data, metrics: List[types.Metric], sort_on: Optional[str] = None
-    ) -> None:
+    def __init__(self, X_test: Any, y_test: Any, metrics: List[types.Metric]) -> None:
         self.X_test = X_test
         self.y_test = y_test
         self.metrics = metrics
-        self.sort_on = sort_on
         self._models: dict = {}
         self._results: List[dict] = []
 
@@ -25,8 +23,8 @@ class Report:
         self,
         model: types.GenericModel,
         name: Optional[str] = None,
-        X_test: Optional[types.Data] = None,
-        y_test: Optional[types.Data] = None,
+        X_test: Optional[Any] = None,
+        y_test: Optional[Any] = None,
     ) -> None:
         X = X_test if X_test else self.X_test
         y = y_test if y_test else self.y_test
@@ -44,9 +42,11 @@ class Report:
         self._results.append(results)
         self._models[name] = model
 
-    def generate(self) -> pd.DataFrame:
+    def generate(self, highlight: Optional[bool] = True) -> Union[Styler, pd.DataFrame]:
         if not self._results:
             return pd.DataFrame([])
         results = pd.DataFrame(self._results)
         results = results.set_index("name")
+        if highlight:
+            return results.style.highlight_max()
         return results
