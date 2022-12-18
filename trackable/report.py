@@ -1,6 +1,6 @@
 """Module used to generate a minimal report to track ML models"""
 
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Union
 
 import pandas as pd
 from pandas.io.formats.style import Styler
@@ -51,6 +51,29 @@ class Report:
         X_test: Optional[Any] = None,
         y_test: Optional[Any] = None,
     ) -> None:
+        """
+        Add a model to the report. The model is passed through each metric
+        and then cached in memory. In future versions, caching strategies
+        may change to account for larger models. Also note that each
+        model must be unique otherwise an error is raised.
+
+        Args:
+            model (types.GenericModel):
+                A generic sklearn type model which must have a `.predict` method.
+                For more complex models, it's easy to create a meta-class which
+                can abstract much of the models complexities
+                (e.g. a forward pass of a neural network) into a `.predict` method.
+            name (Optional[str], optional):
+                Name of the model. Defaults to `model.__class__.__name__`.
+            X_test (Optional[Any], optional):
+                Overwrite the testing data. Defaults to X_test that was used to instantiate the class.
+            y_test (Optional[Any], optional):
+            Overwrite the testing data. Defaults to y_test that was used to instantiate the class.
+
+        Raises:
+            ModelAlreadyExistsError:
+                Raised if model name already exists. This is essentially to avoid caching conflicts.
+        """
         X = X_test if X_test else self.X_test
         y = y_test if y_test else self.y_test
         name = name if name else model.__class__.__name__
@@ -67,11 +90,29 @@ class Report:
         self._results.append(results)
         self._models[name] = model
 
-    def generate(self, highlight: Optional[bool] = True) -> Union[Styler, pd.DataFrame]:
+    def generate(self, highlight: Literal["max", "min", False] = "max") -> Union[Styler, pd.DataFrame]:
+        """
+        Generate the report. By default, the maximum value of each column is highlighted
+
+        Args:
+            highlight (One of: &quot;max&quot;, &quot;min&quot;, False):
+                Highlight either max or min model for each metric. If `False`,
+                do not highlight. Defaults to "max".
+
+        Raises:
+            TypeError: Raised if the highlighting strategy is supported.
+
+        Returns:
+            Union[Styler, pd.DataFrame]: A dataframe or a highlighted Styler.
+        """
         if not self._results:
             return pd.DataFrame([])
         results = pd.DataFrame(self._results)
         results = results.set_index("name")
-        if highlight:
+        if highlight == "max":
             return results.style.highlight_max()
+        if highlight == "min":
+            return results.style.highlight_min()
+        if highlight not in ("max", "min", False):
+            raise TypeError("Highlight must be one of: max, min, None")
         return results

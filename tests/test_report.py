@@ -6,6 +6,7 @@ from unittest.mock import Mock
 import numpy as np
 import pandas as pd
 import pytest
+from pandas.io.formats.style import Styler
 
 from trackable import Report
 from trackable.exceptions import ModelAlreadyExistsError
@@ -106,3 +107,16 @@ def test_generate_3(mock_report_complex, mock_model):
         ]
     ).set_index("name")
     assert correct.equals(mock_report_complex.generate(False))
+
+
+def test_generate_4(mock_report, mock_model):
+    """Test generate 4: test highlighting strategies"""
+    mock_report.add_model(mock_model)
+    report = mock_report.generate(highlight="max")
+    assert isinstance(report, Styler)
+    report = mock_report.generate(highlight="min")
+    assert isinstance(report, Styler)
+    report = mock_report.generate(highlight=False)
+    assert isinstance(report, pd.DataFrame)
+    with pytest.raises(TypeError):
+        mock_report.generate(highlight="42")
