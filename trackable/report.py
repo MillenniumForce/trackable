@@ -6,7 +6,7 @@ import pandas as pd
 from pandas.io.formats.style import Styler
 
 from trackable import types
-from trackable.exceptions import ModelAlreadyExistsError
+from trackable.exceptions import ModelAlreadyExistsError, ModelDoesNotExistError
 
 __all__ = ["Report"]
 
@@ -115,3 +115,9 @@ class Report:
         if highlight not in ("max", "min", False):
             raise TypeError("Highlight must be one of: max, min, None")
         return results
+
+    def get_model(self, name: str) -> types.GenericModel:
+        try:
+            return self._models[name]
+        except KeyError:
+            raise ModelDoesNotExistError(f"Model '{name}' does not exist.")
