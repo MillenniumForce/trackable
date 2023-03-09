@@ -9,7 +9,7 @@ import pytest
 from pandas.io.formats.style import Styler
 
 from trackable import Report
-from trackable.exceptions import ModelAlreadyExistsError
+from trackable.exceptions import ModelAlreadyExistsError, ModelDoesNotExistError
 
 
 @pytest.fixture
@@ -121,3 +121,17 @@ def test_generate_4(mock_report, mock_model):
     assert isinstance(report, pd.DataFrame)
     with pytest.raises(TypeError):
         mock_report.generate(highlight="42")
+
+
+def test_get_model_1(mock_report, mock_model):
+    """Test get_model 1: get correct model"""
+    mock_report.add_model(mock_model, "Model 1")
+    model = mock_report.get_model("Model 1")
+    assert mock_model == model
+
+
+def test_get_model_2(mock_report, mock_model):
+    """Test get_model 1: get correct model"""
+    mock_report.add_model(mock_model, "Model 1")
+    with pytest.raises(ModelDoesNotExistError):
+        mock_report.get_model("Model 2")
