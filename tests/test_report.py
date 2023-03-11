@@ -131,7 +131,22 @@ def test_get_model_1(mock_report, mock_model):
 
 
 def test_get_model_2(mock_report, mock_model):
-    """Test get_model 1: get correct model"""
+    """Test get_model 2: raise an error for incorrect model"""
     mock_report.add_model(mock_model, "Model 1")
     with pytest.raises(ModelDoesNotExistError):
         mock_report.get_model("Model 2")
+
+
+def test_remove_model_1(mock_report, mock_model):
+    """Test remove_model 1: remove correct model"""
+    mock_report.add_model(mock_model, "Model 1")
+    model = mock_report.remove_model("Model 1")
+    assert mock_model == model
+    assert model not in mock_report._models
+
+
+def test_remove_model_2(mock_report, mock_model):
+    """Test remove_model 2: raise an error for non-existant model"""
+    mock_report.add_model(mock_model, "Model 1")
+    with pytest.raises(ModelDoesNotExistError):
+        mock_report.remove_model("Model 2")

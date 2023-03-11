@@ -117,7 +117,36 @@ class Report:
         return results
 
     def get_model(self, name: str) -> types.GenericModel:
+        """Get a model from a report given its name.
+
+        Args:
+            name (str): Name of a model
+
+        Raises:
+            ModelDoesNotExistError: Raised if the given model name does not exist in the report
+
+        Returns:
+            types.GenericModel: A generic model
+        """
         try:
             return self._models[name]
+        except KeyError:
+            raise ModelDoesNotExistError(f"Model '{name}' does not exist.")
+
+    def remove_model(self, name: str) -> types.GenericModel:
+        """Removes a model given its name. The model is returned and then
+        removed from the report.
+
+        Args:
+            name (str): Name of a model
+
+        Raises:
+            ModelDoesNotExistError: Raised if the given model name does not exist in the report
+
+        Returns:
+            types.GenericModel: A generic model
+        """
+        try:
+            return self._models.pop(name)
         except KeyError:
             raise ModelDoesNotExistError(f"Model '{name}' does not exist.")
