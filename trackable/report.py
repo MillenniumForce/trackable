@@ -1,12 +1,16 @@
 """Module used to generate a minimal report to track ML models."""
 
+import os
+import pickle
+import shutil
+import tempfile
 from typing import Any, Dict, List, Literal, Optional, Union
 
 import pandas as pd
 from pandas.io.formats.style import Styler
 
 from trackable import types
-from trackable.exceptions import ModelAlreadyExistsError, ModelDoesNotExistError
+from trackable.exceptions import ArchiveAlreadyExistsError, ModelAlreadyExistsError, ModelDoesNotExistError
 
 __all__ = ["Report"]
 
@@ -150,3 +154,28 @@ class Report:
             return self._models.pop(name)
         except KeyError:
             raise ModelDoesNotExistError(f"Model '{name}' does not exist.")
+
+    def save(self, path: str = "report.trackable") -> None:
+        """Saves report to an archive which can be loaded later.
+        Saved reports will not be overwritten and will raise an exception.
+
+        Args:
+            path (str, optional): Path to save archive.
+            Defaults to "report.trackable" in current working directory.
+
+        Raises:
+            ArchiveAlreadyExistsError: Raised when a report archive with
+            the same name already exists.
+        """
+        archive = "zip"
+        mode = "wb"
+        zip_path = f"{path}.{archive}"
+        if os.path.isfile(zip_path):
+            raise ArchiveAlreadyExistsError(f"{zip_path} already exists.")
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            for name, model in self._models.items():
+                with open(os.path.join(tmp_dir, name), mode) as f:
+                    pickle.dump(model, f)
+
+            shutil.make_archive(path, archive, tmp_dir)

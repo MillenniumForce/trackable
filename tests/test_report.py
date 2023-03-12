@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 """Tests for `trackable` package."""
 
+import os
+import tempfile
 from unittest.mock import Mock
 
 import numpy as np
@@ -9,7 +11,7 @@ import pytest
 from pandas.io.formats.style import Styler
 
 from trackable import Report
-from trackable.exceptions import ModelAlreadyExistsError, ModelDoesNotExistError
+from trackable.exceptions import ArchiveAlreadyExistsError, ModelAlreadyExistsError, ModelDoesNotExistError
 
 
 @pytest.fixture
@@ -150,3 +152,18 @@ def test_remove_model_2(mock_report, mock_model):
     mock_report.add_model(mock_model, "Model 1")
     with pytest.raises(ModelDoesNotExistError):
         mock_report.remove_model("Model 2")
+
+
+def test_archive_model_1(mock_report):
+    """Test archive model 1: archive model correctly (0 models)"""
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        mock_report.save(os.path.join(tmp_dir, "test"))
+        assert os.path.isfile(os.path.join(tmp_dir, "test.zip"))
+
+
+def test_archive_model_2(mock_report):
+    """Test archive model 2: raise error for existing archive"""
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        mock_report.save(os.path.join(tmp_dir, "test"))
+        with pytest.raises(ArchiveAlreadyExistsError):
+            mock_report.save(os.path.join(tmp_dir, "test"))
