@@ -155,13 +155,19 @@ class Report:
         except KeyError:
             raise ModelDoesNotExistError(f"Model '{name}' does not exist.")
 
-    def save(self, path: str = "report.trackable") -> None:
+    def save(self, path: str = "report") -> None:
         """Saves report to an archive which can be loaded later.
         Saved reports will not be overwritten and will raise an exception.
 
+        It is assumed that each model in the report can be pickled.
+
+        Note: X_test, y_test and metrics are NOT saved.
+        They should be saved separetely.
+
         Args:
             path (str, optional): Path to save archive.
-            Defaults to "report.trackable" in current working directory.
+            Defaults to "report" in current working directory.
+            ".zip" is appended automatically.
 
         Raises:
             ArchiveAlreadyExistsError: Raised when a report archive with
@@ -169,13 +175,26 @@ class Report:
         """
         archive = "zip"
         mode = "wb"
+        results = "trackable_results"
+        models_sub_folder = "models"
         zip_path = f"{path}.{archive}"
+
         if os.path.isfile(zip_path):
-            raise ArchiveAlreadyExistsError(f"{zip_path} already exists.")
+            raise ArchiveAlreadyExistsError(
+                f"{zip_path} already exists. Provide another path to avoid overwriting existing archives."
+            )
 
         with tempfile.TemporaryDirectory() as tmp_dir:
+            models_dir = os.path.join(tmp_dir, models_sub_folder)
+            os.mkdir(models_dir)
+
             for name, model in self._models.items():
-                with open(os.path.join(tmp_dir, name), mode) as f:
+                model_path = os.path.join(models_dir, name)
+                with open(model_path, mode) as f:
                     pickle.dump(model, f)
+
+            results_path = os.path.join(tmp_dir, results)
+            with open(results_path, mode) as f:
+                pickle.dump(self._results, f)
 
             shutil.make_archive(path, archive, tmp_dir)
