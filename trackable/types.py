@@ -11,4 +11,3 @@ class GenericModel(Protocol):
 
     def predict(self, data: Any) -> Any:
         """Generic predict method."""
-        ...
