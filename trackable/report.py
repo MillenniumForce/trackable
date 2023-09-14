@@ -4,7 +4,7 @@ import os
 import pickle
 import shutil
 import tempfile
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Type, TypeVar, Union
 
 import pandas as pd
 from pandas.io.formats.style import Styler
@@ -13,6 +13,8 @@ from trackable import types
 from trackable.exceptions import ArchiveAlreadyExistsError, ModelAlreadyExistsError, ModelDoesNotExistError
 
 __all__ = ["Report"]
+
+R = TypeVar("R", bound="Report")
 
 
 class Report:
@@ -47,6 +49,50 @@ class Report:
         self.metrics = metrics
         self._models: dict = {}
         self._results: List[dict] = []
+
+    @classmethod
+    def load(cls: Type[R], X_test: Any, y_test: Any, metrics: List[types.Metric], path: str = "report") -> R:
+        """Loads a report from an archive. See the save report class method.
+
+        The class method loads the stored models and results from the archive.
+        The testing data and metrics must be provided separately.
+
+        Args:
+            X_test (Any): Testing data. Should be identical to the original report.
+            y_test (Any): Ground truth prediction data. Should be identical to the original report.
+            metrics (List[types.Metric]): List of metrics. Should be identical to the original report.
+            path (str): Path to archived report. Don't append ".zip".
+                Defaults to 'report' since this is the default path for saving.
+
+        Returns:
+            R: Loaded report class
+        """
+        archive_type = "zip"
+        mode = "rb"
+        results_dir = "trackable_results"
+        models_sub_folder = "models"
+        zip_path = f"{path}.{archive_type}"
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            shutil.unpack_archive(zip_path, tmp_dir, format=archive_type)
+
+            models_dir = os.path.join(tmp_dir, models_sub_folder)
+            models = {}
+            results = []
+            for model_name in os.listdir(models_dir):
+                model_path = os.path.join(models_dir, model_name)
+                with open(model_path, mode) as f:
+                    loaded_model = pickle.load(f)
+                    models[model_name] = loaded_model
+
+                results_path = os.path.join(tmp_dir, results_dir)
+                with open(results_path, mode) as f:
+                    results = pickle.load(f)
+
+        report = cls(X_test, y_test, metrics)
+        report._models = models
+        report._results = results
+        return report
 
     def add_model(
         self,
