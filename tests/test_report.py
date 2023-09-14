@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 """Tests for `trackable` package."""
 
-from unittest.mock import Mock
+import os
+import tempfile
 
 import numpy as np
 import pandas as pd
@@ -9,7 +10,17 @@ import pytest
 from pandas.io.formats.style import Styler
 
 from trackable import Report
-from trackable.exceptions import ModelAlreadyExistsError
+from trackable.exceptions import ArchiveAlreadyExistsError, ModelAlreadyExistsError, ModelDoesNotExistError
+
+MOCK_MODEL_NAME = "Mock"
+
+
+class MockModel:
+    """Simple model for testing"""
+
+    def predict(self, x):
+        """Mock predict f(x) = x"""
+        return x
 
 
 @pytest.fixture
@@ -40,10 +51,10 @@ def mock_report_complex():
 
 
 @pytest.fixture
-def mock_model():
+def mock_model(mocker):
     """Fixture to mock a dummy model."""
-    model = Mock()
-    model.predict = lambda x: x
+    model = MockModel()
+    model.__class__.__name__ = MOCK_MODEL_NAME
     return model
 
 
@@ -51,7 +62,7 @@ def test_add_model_1(mock_report, mock_model):
     """Test add_model 1: add a single model."""
     mock_report.add_model(mock_model)
     print(mock_report._results, mock_report._models)
-    assert mock_report._results == [{"<lambda>": 1, "name": "Mock"}]
+    assert mock_report._results == [{"<lambda>": 1, "name": MOCK_MODEL_NAME}]
     assert mock_report._models == {"Mock": mock_model}
 
 
@@ -68,7 +79,7 @@ def test_add_model_3(mock_report_complex, mock_model):
     """Test add model 3: add model with multiple metrics."""
     mock_report_complex.add_model(mock_model)
     print(mock_report_complex._results, mock_report_complex._models)
-    assert mock_report_complex._results == [{"mock_metric_1": 1, "mock_metric_2": 2, "name": "Mock"}]
+    assert mock_report_complex._results == [{"mock_metric_1": 1, "mock_metric_2": 2, "name": MOCK_MODEL_NAME}]
     assert mock_report_complex._models == {"Mock": mock_model}
 
 
@@ -84,7 +95,7 @@ def test_generate_1(mock_report, mock_model):
     """Test generate 1: show correct results in dataframe."""
     mock_report.add_model(mock_model)
     report = mock_report.generate(False)
-    correct = pd.DataFrame([{"<lambda>": 1.0, "name": "Mock"}]).set_index("name")
+    correct = pd.DataFrame([{"<lambda>": 1.0, "name": MOCK_MODEL_NAME}]).set_index("name")
     print(report)
     print(correct)
     assert correct.equals(report)
@@ -121,3 +132,61 @@ def test_generate_4(mock_report, mock_model):
     assert isinstance(report, pd.DataFrame)
     with pytest.raises(TypeError):
         mock_report.generate(highlight="42")
+
+
+def test_get_model_1(mock_report, mock_model):
+    """Test get_model 1: get correct model"""
+    mock_report.add_model(mock_model, "Model 1")
+    model = mock_report.get_model("Model 1")
+    assert mock_model == model
+
+
+def test_get_model_2(mock_report, mock_model):
+    """Test get_model 2: raise an error for incorrect model"""
+    mock_report.add_model(mock_model, "Model 1")
+    with pytest.raises(ModelDoesNotExistError):
+        mock_report.get_model("Model 2")
+
+
+def test_remove_model_1(mock_report, mock_model):
+    """Test remove_model 1: remove correct model"""
+    mock_report.add_model(mock_model, "Model 1")
+    model = mock_report.remove_model("Model 1")
+    assert mock_model == model
+    assert model not in mock_report._models
+
+
+def test_remove_model_2(mock_report, mock_model):
+    """Test remove_model 2: raise an error for non-existant model"""
+    mock_report.add_model(mock_model, "Model 1")
+    with pytest.raises(ModelDoesNotExistError):
+        mock_report.remove_model("Model 2")
+
+
+def test_archive_model_1(mock_report):
+    """Test archive model 1: archive model correctly (0 models)"""
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        mock_report.save(os.path.join(tmp_dir, "test"))
+        assert os.path.isfile(os.path.join(tmp_dir, "test.zip"))
+
+
+def test_archive_model_2(mock_report):
+    """Test archive model 2: raise error for existing archive"""
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        mock_report.save(os.path.join(tmp_dir, "test"))
+        with pytest.raises(ArchiveAlreadyExistsError):
+            mock_report.save(os.path.join(tmp_dir, "test"))
+
+
+def test_load_model_1(mock_report, mock_model):
+    """Test load model 1: save and load a model correctly"""
+    mock_report.add_model(mock_model)
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        test_zip = "test"
+        mock_report.save(os.path.join(tmp_dir, test_zip))
+        X_test = np.array([])
+        y_test = np.array([])
+        metrics = [lambda x, y: 1.0]
+        new_report = Report.load(X_test, y_test, metrics, os.path.join(tmp_dir, test_zip))
+    assert type(new_report._models[MOCK_MODEL_NAME]) is type(mock_model)
+    assert new_report._results == mock_report._results
